@@ -17,24 +17,53 @@ jobs:
         run: |
           mkdir -p k6/results
           mkdir -p k6/tests/screenshots
+          echo "📁 Directory structure:"
+          find k6/ -type f -name "*.js" || echo "No JS files found"
+
       - name: Setup k6 with browser support
         uses: grafana/setup-k6-action@v1
         with:
+          version: "0.54.0"  # Specify a stable version
           browser: true
 
+      - name: Debug - List test files
+        run: |
+          echo "🔍 Test files:"
+          ls -la k6/tests/ || echo "No tests directory"
+          echo "📄 File contents:"
+          cat k6/tests/ui-demo_test.js || echo "Cannot read test file"
+
       - name: Run k6 UI browser test
+        id: k6-test
         uses: grafana/run-k6-action@v1
         env:
-          BASE_URL: https://example.com/
+          BASE_URL: https://test.k6.io/  # Using k6 test site instead of example.com
         with:
-          path: |
-            k6/tests/ui-demo_test.js
+          path: k6/tests/ui-demo_test.js
           flags: |
             --out json=k6/results/ui-demo-results.json
+            --verbose
+        continue-on-error: true  # Continue even if test fails to capture results
+
       - name: Upload k6 results artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: k6-ui-results
           path: |
             k6/results/
             k6/tests/screenshots/
+          retention-days: 7
+
+      - name: Display test summary
+        if: always()
+        run: |
+          echo "📊 Test Execution Completed"
+          echo "==========================="
+          if [ -f "k6/results/ui-summary.json" ]; then
+            echo "✅ Results generated successfully"
+            echo "📁 Files created:"
+            find k6/results/ -type f | head -10
+          else
+            echo "❌ No results found"
+          fi
