@@ -17,7 +17,6 @@ jobs:
         run: |
           mkdir -p k6/results
           mkdir -p k6/tests/screenshots
-
       - name: Setup k6 with browser support
         uses: grafana/setup-k6-action@v1
         with:
@@ -32,7 +31,6 @@ jobs:
             k6/tests/ui-demo_test.js
           flags: |
             --out json=k6/results/ui-demo-results.json
-
       - name: Upload k6 results artifact
         uses: actions/upload-artifact@v4
         with:
