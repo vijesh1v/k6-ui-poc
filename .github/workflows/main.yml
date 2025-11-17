@@ -1,4 +1,9 @@
-# .github/workflows/k6-ui-browser.yml
+name: k6 UI Browser Test
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   k6-ui-test:
@@ -8,8 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Create results directory
-        run: mkdir -p ./k6/results
+      - name: Create results directories
+        run: |
+          mkdir -p k6/results
+          mkdir -p k6/tests/screenshots
 
       - name: Setup k6 with browser support
         uses: grafana/setup-k6-action@v1
@@ -22,14 +29,14 @@ jobs:
           BASE_URL: https://example.com/
         with:
           path: |
-            ./k6/tests/ui-demo_test.js
+            k6/tests/ui-demo_test.js
           flags: |
-            --out json=./k6/results/ui-demo-results.json
+            --out json=k6/results/ui-demo-results.json
 
       - name: Upload k6 results artifact
         uses: actions/upload-artifact@v4
         with:
           name: k6-ui-results
           path: |
-            ./k6/results/
-            ./k6/tests/screenshots/
+            k6/results/
+            k6/tests/screenshots/
