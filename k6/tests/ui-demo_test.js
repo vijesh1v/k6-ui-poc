@@ -1,7 +1,9 @@
 import { browser } from 'k6/browser';
 import { check } from 'k6';
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.4/index.js';
-import htmlReport from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
+
+// ✅ FIXED: Use the correct import for HTML reporter
+import { htmlReport } from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/2.4.0/dist/bundle.js';
 
 export const options = {
   scenarios: {
@@ -23,35 +25,53 @@ export const options = {
 
 export default async function () {
   const page = await browser.newPage();
-  const baseUrl = __ENV.BASE_URL || 'https://example.com/';
+  
+  // Use the environment variable or default to a test site
+  const baseUrl = __ENV.BASE_URL || 'https://test.k6.io/';
 
   try {
-    const response = await page.goto(baseUrl, { waitUntil: 'load' });
+    console.log(`🌐 Navigating to: ${baseUrl}`);
+    
+    const response = await page.goto(baseUrl, { waitUntil: 'networkidle' });
 
     check(response, {
       'HTTP 200 OK': (r) => r && r.status() === 200,
     });
 
     const title = await page.title();
+    console.log(`📄 Page title: ${title}`);
+    
     check(title, {
-      'Title contains Example Domain': (t) => t.includes('Example Domain'),
+      'Title is not empty': (t) => t && t.length > 0,
     });
 
-    await page.screenshot({ path: `k6/tests/screenshots/example.png` });
+    // Take screenshot
+    await page.screenshot({ 
+      path: `k6/tests/screenshots/example-${Date.now()}.png`,
+      fullPage: true 
+    });
+    
+    console.log('✅ Test completed successfully');
+
+  } catch (error) {
+    console.log(`❌ Test failed: ${error.message}`);
+    // Take screenshot on failure
+    await page.screenshot({ 
+      path: `k6/tests/screenshots/error-${Date.now()}.png`,
+      fullPage: true 
+    });
+    throw error;
   } finally {
     await page.close();
   }
 }
 
-/*
- * 🔥 CUSTOM CLIENT-FRIENDLY SUMMARY REPORT
- */
 export function handleSummary(data) {
+  console.log('📊 Generating summary reports...');
+  
   return {
-    stdout: textSummary(data, { indent: ' ', enableColors: true }),
-
+    'stdout': textSummary(data, { indent: ' ', enableColors: true }),
     'k6/results/ui-summary.html': htmlReport(data),
-
     'k6/results/ui-summary.json': JSON.stringify(data, null, 2),
   };
 }
