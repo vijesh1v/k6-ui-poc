@@ -33,6 +33,14 @@ jobs:
           flags: |
             --out json=k6/results/ui-demo-results.json
 
+      # ⭐ Convert HTML summary → PDF
+      - name: Convert HTML report to PDF
+        uses: narthanaj/html-to-pdf-action@v1
+        with:
+          source: k6/results/ui-summary.html
+          output: k6/results/ui-summary.pdf
+
+      # Keep artifacts (HTML, PDF, screenshots)
       - name: Upload k6 results artifact
         uses: actions/upload-artifact@v4
         with:
@@ -40,3 +48,34 @@ jobs:
           path: |
             k6/results/
             k6/tests/screenshots/
+
+      # ⭐ Send PDF to client via email
+      - name: Send k6 report via email
+        uses: dawidd6/action-send-mail@v6
+        with:
+          # EITHER use a single connection URL secret (recommended)...
+          # connection_url: ${{ secrets.MAIL_CONNECTION }}
+
+          # ...OR configure SMTP manually (example: Gmail SMTP using app password):
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}      # your SMTP username
+          password: ${{ secrets.MAIL_PASSWORD }}      # your SMTP/app password
+
+          subject: "k6 UI Test Report"
+          from: "k6 Bot <no-reply@example.com>"
+          to: "vijeshv.in@gmail.com"
+
+          body: |
+            Hi,
+
+            Please find attached the latest k6 UI test report (PDF).
+            This report was generated automatically from the GitHub Actions pipeline.
+
+            Regards,
+            k6 Automation
+
+          # Attach the generated PDF
+          attachments: |
+            k6/results/ui-summary.pdf
