@@ -1,10 +1,4 @@
 # .github/workflows/k6-ui-browser.yml
-name: k6 UI Browser Test
-
-on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
 
 jobs:
   k6-ui-test:
@@ -14,29 +8,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install k6 with browser (Chromium) support
+      - name: Create results directory
+        run: mkdir -p ./k6/results
+
       - name: Setup k6 with browser support
         uses: grafana/setup-k6-action@v1
         with:
-          browser: true          # installs Chrome for k6 browser tests
-          # k6-version: '0.52.0' # optional, use a specific version
+          browser: true
 
-      # Run k6 test using official k6 runner
       - name: Run k6 UI browser test
         uses: grafana/run-k6-action@v1
         env:
-          # Passed into the script as __ENV.BASE_URL (optional override)
           BASE_URL: https://example.com/
         with:
-          # Path to your k6 test script(s)
           path: |
             ./k6/tests/ui-demo_test.js
-
-          # Optional flags passed directly to `k6 run`
           flags: |
             --out json=./k6/results/ui-demo-results.json
 
-      # Upload k6 results & screenshots as artifact
       - name: Upload k6 results artifact
         uses: actions/upload-artifact@v4
         with:
