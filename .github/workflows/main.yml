@@ -34,11 +34,11 @@ jobs:
             --out json=k6/results/ui-demo-results.json
 
       # ⭐ Convert HTML summary → PDF
-      - name: Convert HTML report to PDF
-        uses: narthanaj/html-to-pdf-action@v1
-        with:
-          source: k6/results/ui-summary.html
-          output: k6/results/ui-summary.pdf
+      # - name: Convert HTML report to PDF
+      #   uses: narthanaj/html-to-pdf-action@v1
+      #   with:
+      #     source: k6/results/ui-summary.html
+      #     output: k6/results/ui-summary.pdf
 
       # Keep artifacts (HTML, PDF, screenshots)
       - name: Upload k6 results artifact
