@@ -1,13 +1,8 @@
-// k6/tests/ui-demo.test.js
 import { browser } from 'k6/browser';
 import { check } from 'k6';
+import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.4/index.js';
+import htmlReport from 'https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js';
 
-/**
- * k6 execution options:
- * - Single shared iteration for a simple UI smoke test.
- * - Browser type: Chromium (k6 browser module).
- * - All checks must pass.
- */
 export const options = {
   scenarios: {
     ui_smoke: {
@@ -31,24 +26,32 @@ export default async function () {
   const baseUrl = __ENV.BASE_URL || 'https://example.com/';
 
   try {
-    // Navigate to demo site and wait until fully loaded
     const response = await page.goto(baseUrl, { waitUntil: 'load' });
 
-    // Basic network-level assertion
     check(response, {
-      'response is HTTP 200': (r) => r && r.status() === 200,
+      'HTTP 200 OK': (r) => r && r.status() === 200,
     });
 
-    // Simple UI-level assertion using page title
     const title = await page.title();
     check(title, {
-      'page title contains "Example Domain"': (t) =>
-        typeof t === 'string' && t.includes('Example Domain'),
+      'Title contains Example Domain': (t) => t.includes('Example Domain'),
     });
 
-    // Optional: take a screenshot (will be stored in the GitHub Actions workspace)
-    await page.screenshot({ path: `./k6/tests/screenshots/example-home.png` });
+    await page.screenshot({ path: `k6/tests/screenshots/example.png` });
   } finally {
     await page.close();
   }
+}
+
+/*
+ * 🔥 CUSTOM CLIENT-FRIENDLY SUMMARY REPORT
+ */
+export function handleSummary(data) {
+  return {
+    stdout: textSummary(data, { indent: ' ', enableColors: true }),
+
+    'k6/results/ui-summary.html': htmlReport(data),
+
+    'k6/results/ui-summary.json': JSON.stringify(data, null, 2),
+  };
 }
